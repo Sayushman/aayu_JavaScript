@@ -1,4 +1,4 @@
-import mongoose, {Schema, Scheme} from "mongoose";
+import mongoose, {Schema} from "mongoose";
 import  jwt  from "jsonwebtoken";
 import bcrypt from "bcrypt"
 
@@ -53,12 +53,26 @@ const userSchema = new Schema(
     }
 )
 
-userSchema.pre("save", async function (next) {
-    if(!this.isModified("password")) return next();
+// userSchema.pre("save", async function (next) {
+//     if(!this.isModified("password")) return next();
     
-    this.password = bcrypt.hash(this.password, 10)
-    next()
-})
+//     this.password = bcrypt.hash(this.password, 10)
+//     next()
+// })
+
+
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    
+    try {
+        const hashedPassword = await bcrypt.hash(this.password, 10);
+        this.password = hashedPassword;
+        next();
+    } catch (error) {
+        next(error); // Pass the error to the next middleware
+    }
+});
+
 
 userSchema.methods.isPasswordCorrect = async function
 (password){
